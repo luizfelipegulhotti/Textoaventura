@@ -1,7 +1,9 @@
 import model.Cena;
 import model.Item;
+import model.Save;
 import repository.CenaDAO;
 import repository.ItemDAO;
+import repository.SaveDAO;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -13,7 +15,7 @@ public class Main {
         String command;
 
         do {
-            System.out.println("Digite um comando ('start', 'help', 'exit', etc.):");
+            System.out.println("Digite um comando ('start', 'help', 'exit', 'load','static'):");
             command = scanner.nextLine();
 
             if ("start".equalsIgnoreCase(command)) {
@@ -31,7 +33,7 @@ public class Main {
                     // Loop interno para continuar aceitando comandos após "start"
                     String subCommand;
                     do {
-                        System.out.println("Digite um comando ('help', 'exit', 'USE MAPA', etc.):");
+                        System.out.println("Digite um comando ('help','exit','USE MAPA','save','load','static'.):");
                         subCommand = scanner.nextLine();
 
                         if ("help".equalsIgnoreCase(subCommand)) {
@@ -44,9 +46,13 @@ public class Main {
                         } else if ("USE MAPA".equalsIgnoreCase(subCommand)) {
                             System.out.println("Comando 'USE MAPA' recebido no loop interno.");
                             useMapa();
-                        } else if (!"exit".equalsIgnoreCase(subCommand)) {
+                        } else if ("save".equalsIgnoreCase(subCommand)) {
+                        System.out.println("iniciando salvamento do jogo");
+                        save();
+                        }else if (!"exit".equalsIgnoreCase(subCommand)) {
                             System.out.println("Comando não reconhecido.");
                         }
+
                     } while (!"exit".equalsIgnoreCase(subCommand));
 
                 } catch (SQLException e) {
@@ -75,6 +81,15 @@ public class Main {
             }
         } catch (SQLException e) {
             System.out.println("Erro ao buscar a Cena 2: " + e.getMessage());
+            throw new RuntimeException(e);
+        }
+    }
+    private static void save() {
+        System.out.println("Salvando o jogo");
+        try {
+            Save save = SaveDAO.novoJogo(1);
+        } catch (SQLException e) {
+            System.out.println("Erro ao tentar salvar");
             throw new RuntimeException(e);
         }
     }
