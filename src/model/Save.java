@@ -11,6 +11,10 @@ public class Save {
         this.inventarioAtual = inventarioAtual;
     }
 
+    public Save() {
+
+    }
+
     public Integer getId_save() {
         return id_save;
     }
