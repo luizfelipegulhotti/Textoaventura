@@ -1,97 +1,179 @@
-import model.Cena;
-import model.Item;
-import model.Save;
-import repository.CenaDAO;
-import repository.ItemDAO;
-import repository.SaveDAO;
-
-import java.sql.SQLException;
-import java.util.List;
+import java.sql.*;
 import java.util.Scanner;
 
 public class Main {
+    private static Connection conn;
+    private static Scanner scanner = new Scanner(System.in);
+
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        String command;
+        try {
+            conn = DriverManager.getConnection("jdbc:mysql://localhost/facul", "root", ""); // Substitua com suas credenciais
+            int cenaAtual = carregarJogo();
 
-        do {
-            System.out.println("Digite um comando ('start', 'help', 'exit', 'load','static'):");
-            command = scanner.nextLine();
+            while (true) {
+                exibirCena(cenaAtual);
+                System.out.println("Digite um comando (ou HELP para ajuda):");
+                String comando = scanner.nextLine().toUpperCase();
 
-            if ("start".equalsIgnoreCase(command)) {
-                try {
-                    Cena cena = CenaDAO.findCenaById(1);
-                    if (cena != null) {
-                        System.out.println(cena.toString());
-
-                        List<Item> itens = ItemDAO.findItensByScene(cena);
-                        System.out.println("Itens: " + itens);
-                    } else {
-                        System.out.println("Cena não encontrada.");
-                    }
-
-                    // Loop interno para continuar aceitando comandos após "start"
-                    String subCommand;
-                    do {
-                        System.out.println("Digite um comando ('help','exit','USE MAPA','save','load','static'.):");
-                        subCommand = scanner.nextLine();
-
-                        if ("help".equalsIgnoreCase(subCommand)) {
-                            System.out.println("Comandos disponíveis:");
-                            System.out.println("get item: pega o item e adiciona ao inventário");
-                            System.out.println("save: salva o jogo");
-                            System.out.println("descrição : mostra a descrição do item");
-                            System.out.println("use item: te faz usar o item");
-                            System.out.println("USE MAPA: busca a cena 2 do banco de dados");
-                        } else if ("USE MAPA".equalsIgnoreCase(subCommand)) {
-                            System.out.println("Comando 'USE MAPA' recebido no loop interno.");
-                            useMapa();
-                        } else if ("save".equalsIgnoreCase(subCommand)) {
-                        System.out.println("iniciando salvamento do jogo");
-                        save();
-                        }else if (!"exit".equalsIgnoreCase(subCommand)) {
-                            System.out.println("Comando não reconhecido.");
-                        }
-
-                    } while (!"exit".equalsIgnoreCase(subCommand));
-
-                } catch (SQLException e) {
-                    throw new RuntimeException(e);
+                if (comando.equals("HELP")) {
+                    exibirAjuda();
+                    continue;  // Volta ao loop após exibir ajuda
                 }
-            } else if ("USE MAPA".equalsIgnoreCase(command)) {
-                System.out.println("Comando 'USE MAPA' recebido no loop principal.");
-                useMapa();
+
+                int proximaCena = processarComando(comando, cenaAtual);
+
+                if (proximaCena == -1) {
+                    System.out.println("Game Over! Deseja recomeçar? (S/N)");
+                    String resposta = scanner.nextLine();
+                    if (resposta.equalsIgnoreCase("S")) {
+                        cenaAtual = 1;
+                        limparInventario();
+                    } else {
+                        break;
+                    }
+                } else if (proximaCena == 0) {
+                    System.out.println("Jogo salvo e saindo.");
+                    break;
+                } else {
+                    cenaAtual = proximaCena;
+                }
             }
-        } while (!"exit".equalsIgnoreCase(command));
 
-        System.out.println("Programa encerrado.");
-    }
-
-    private static void useMapa() {
-        System.out.println("Método useMapa() chamado.");
-        try {
-            Cena cena = CenaDAO.findCenaById(2);
-            if (cena != null) {
-                System.out.println("Cena 2 encontrada: " + cena.toString());
-
-                List<Item> itens = ItemDAO.findItensByScene(cena);
-                System.out.println("Itens: " + itens);
-            } else {
-                System.out.println("Cena 2 não encontrada.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
-        } catch (SQLException e) {
-            System.out.println("Erro ao buscar a Cena 2: " + e.getMessage());
-            throw new RuntimeException(e);
-        }
-    }
-    private static void save() {
-        System.out.println("Salvando o jogo");
-        try {
-            Save save = SaveDAO.novoJogo(1);
-        } catch (SQLException e) {
-            System.out.println("Erro ao tentar salvar");
-            throw new RuntimeException(e);
         }
     }
 
+    private static int carregarJogo() throws SQLException {
+        System.out.println("Deseja carregar o jogo salvo? (S/N)");
+        String resposta = scanner.nextLine();
+        if (resposta.equalsIgnoreCase("S")) {
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT cenaAtual FROM save ORDER BY id_save DESC LIMIT 1");
+            if (rs.next()) {
+                return rs.getInt("cenaAtual");
+            }
+        }
+        return 1; // Começa do início se não houver save
+    }
+
+    private static void exibirCena(int idCena) throws SQLException {
+        PreparedStatement stmt = conn.prepareStatement("SELECT nomeTitulo, descricaoCenas FROM cenas WHERE id_cenas = ?");
+        stmt.setInt(1, idCena);
+        ResultSet rs = stmt.executeQuery();
+        if (rs.next()) {
+            System.out.println(rs.getString("nomeTitulo"));
+            System.out.println(rs.getString("descricaoCenas"));
+        }
+        exibirInventario();
+    }
+
+    private static int processarComando(String comando, int cenaAtual) throws SQLException {
+        if (comando.startsWith("GET")) {
+            return pegarItem(comando.substring(4).trim(), cenaAtual);
+        } else if (comando.startsWith("USE")) {
+            return usarItem(comando, cenaAtual);
+        } else if (comando.equals("SAVE")) {
+            salvarJogo(cenaAtual);
+            return 0; // Retorna 0 para indicar que o jogo foi salvo
+        } else {
+            System.out.println("Comando inválido.");
+            return cenaAtual;
+        }
+    }
+
+    private static int pegarItem(String itemNome, int cenaAtual) throws SQLException {
+        PreparedStatement stmt = conn.prepareStatement("SELECT * FROM itens WHERE nome = ? AND cena_Atual = ?");
+        stmt.setString(1, itemNome);
+        stmt.setInt(2, cenaAtual);
+        ResultSet rs = stmt.executeQuery();
+
+        if (rs.next()) {
+            System.out.println("Você pegou: " + rs.getString("nome"));
+            salvarInventario(rs.getInt("id_itens"));
+            return cenaAtual; // Fica na mesma cena após pegar o item
+        } else {
+            System.out.println("Esse item não está disponível aqui.");
+            return cenaAtual;
+        }
+    }
+
+    private static int usarItem(String comando, int cenaAtual) throws SQLException {
+        PreparedStatement stmt = conn.prepareStatement("SELECT * FROM itens WHERE comando_correto = ? AND cena_Atual = ?");
+        stmt.setString(1, comando);
+        stmt.setInt(2, cenaAtual);
+        ResultSet rs = stmt.executeQuery();
+
+        if (rs.next()) {
+            System.out.println(rs.getString("descricao_Positiva"));
+            int proximaCena = rs.getInt("proxima_Cena");
+
+            if (proximaCena == 7) { // Se a próxima cena for 7, que é Game Over
+                System.out.println("Game Over!");
+                return -1; // Retorna -1 para indicar Game Over
+            }
+
+            salvarJogo(cenaAtual); // Salva o progresso automaticamente
+            return proximaCena;
+        } else {
+            System.out.println("Comando incorreto ou você morreu.");
+            return -1; // Cena de game over
+        }
+    }
+
+    private static void salvarInventario(int idItem) throws SQLException {
+        PreparedStatement stmt = conn.prepareStatement("INSERT INTO inventarioSave (id_itens) VALUES (?)");
+        stmt.setInt(1, idItem);
+        stmt.executeUpdate();
+        System.out.println("Item salvo no inventário.");
+    }
+
+    private static void exibirInventario() throws SQLException {
+        System.out.println("Inventário Atual:");
+        Statement stmt = conn.createStatement();
+        ResultSet rs = stmt.executeQuery(
+                "SELECT i.nome FROM itens i INNER JOIN inventarioSave iv ON i.id_itens = iv.id_itens");
+        while (rs.next()) {
+            System.out.println("- " + rs.getString("nome"));
+        }
+    }
+
+    private static void salvarJogo(int cenaAtual) throws SQLException {
+        PreparedStatement stmt = conn.prepareStatement("INSERT INTO save (cenaAtual, inventarioAtual) VALUES (?, ?)");
+        stmt.setInt(1, cenaAtual);
+        stmt.setInt(2, recuperarUltimoInventario());
+        stmt.executeUpdate();
+        System.out.println("Jogo salvo.");
+    }
+
+    private static int recuperarUltimoInventario() throws SQLException {
+        Statement stmt = conn.createStatement();
+        ResultSet rs = stmt.executeQuery("SELECT id_inventory FROM inventarioSave ORDER BY id_inventory DESC LIMIT 1");
+        if (rs.next()) {
+            return rs.getInt("id_inventory");
+        }
+        return 0; // Retorna 0 se não houver itens
+    }
+
+    private static void limparInventario() throws SQLException {
+        Statement stmt = conn.createStatement();
+        stmt.executeUpdate("DELETE FROM inventarioSave");
+        System.out.println("Inventário limpo.");
+    }
+
+    private static void exibirAjuda() {
+        System.out.println("==== AJUDA ====");
+        System.out.println("Comandos disponíveis:");
+        System.out.println("- GET <NOME_DO_ITEM>: Pega um item disponível na cena atual.");
+        System.out.println("- USE <NOME_DO_ITEM>: Usa um item disponível na cena atual.");
+        System.out.println("- SAVE: Salva o progresso do jogo (cena atual e itens no inventário).");
+        System.out.println("- HELP: Exibe esta mensagem de ajuda.");
+        System.out.println("- Para continuar, use os comandos corretamente de acordo com o cenário descrito.");
+    }
 }
