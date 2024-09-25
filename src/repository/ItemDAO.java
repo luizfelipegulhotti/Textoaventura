@@ -1,6 +1,7 @@
 package repository;
 
 import model.Cena;
+import model.Inventariosave;
 import model.Item;
 
 import java.sql.*;
@@ -35,7 +36,18 @@ public class ItemDAO {
 
         return itens;
     }
-
+    public static String CHECK(String indice) throws SQLException{
+        Connection conn = Mysql.getConnection();
+        String sql = "SELECT descricaoItens FROM itens i WHERE nome LIKE ?;";
+        PreparedStatement stmt = conn.prepareStatement(sql);
+        stmt.setString(1, "%" + indice + "%");
+        ResultSet rs = stmt.executeQuery();
+        String descricaoItens = new String();
+        if(rs.next()) {
+             descricaoItens = rs.getString("descricaoItens");
+        }
+        return descricaoItens;
+    }
 }
 //    public static String buscarComandoCerto(int item) throws SQLException {
 //        Connection connection = Mysql.getConnection();

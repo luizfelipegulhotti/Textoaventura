@@ -2,8 +2,9 @@ package repository;
 
 import model.Inventariosave;
 
-import java.awt.*;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 public class InventariosaveDAO {
     Scanner sc = new Scanner(System.in);
@@ -42,17 +43,49 @@ public class InventariosaveDAO {
             System.out.println("Item guardado com sucesso.");
         }
     }
-    public static void Load(int getId_itens) throws SQLException {
+    public static int Load(int Ns) throws SQLException {
         Connection conn = Mysql.getConnection();
         // Verifica se o item já está no inventário
-        String sql = "SELECT id_cena_atual FROM inventariosave;";
+        String sql = "select * from inventariosave i where id_cena_atual = ?";
         PreparedStatement stmt = conn.prepareStatement(sql);
-        stmt.setInt(1, getId_itens);
+        stmt.setInt(1, Ns);
         ResultSet rs = stmt.executeQuery();
-        System.out.println("Qual jogo deseja carregar?");
-
+        int carregarSave = 0;
+        if(rs.next()) {
+           carregarSave = rs.getInt("id_cena_atual");
+        }
+        return carregarSave;
     }
 
+    public static List<Integer> loadSaveIds() throws SQLException {
+        Connection conn = Mysql.getConnection();
+        List<Integer> saveIds = new ArrayList<>();
 
+        try {
+            // Consulta SQL para obter os IDs dos saves
+            String sql = "SELECT id_cena_atual FROM inventariosave;";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery();
+
+            // Adiciona cada ID encontrado na lista
+            while (rs.next()) {
+                int idSave = rs.getInt("id_cena_atual");
+                saveIds.add(idSave);
+            }
+        } catch (SQLException e) {
+            // Exibe mensagem de erro para depuração
+            System.out.println("Erro ao carregar IDs dos saves: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            // Fecha a conexão para evitar vazamentos de recursos
+            if (conn != null) {
+                conn.close();
+            }
+        }
+
+        return saveIds; // Retorna a lista de IDs dos saves
+    }
 }
+
+
 

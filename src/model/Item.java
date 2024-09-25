@@ -3,6 +3,7 @@ package model;
 public class Item {
     private Integer id_itens;
     private String nome;
+    private String descricaoItens;
     private String descricao_Positiva;
     private String descricao_Negativa;
     private String comando_correto;
@@ -65,11 +66,20 @@ public class Item {
         this.proxima_Cena = proxima_Cena;
     }
 
+    public String getDescricaoItens() {
+        return descricaoItens;
+    }
+
+    public void setDescricaoItens(String descricaoItens) {
+        this.descricaoItens = descricaoItens;
+    }
+
     @Override
     public String toString() {
         return "Item{" +
                 "id_itens=" + id_itens +
                 ", nome='" + nome + '\'' +
+                ", descricaoItens='" + descricaoItens + '\'' +
                 ", descricao_Positiva='" + descricao_Positiva + '\'' +
                 ", descricao_Negativa='" + descricao_Negativa + '\'' +
                 ", comando_correto='" + comando_correto + '\'' +
