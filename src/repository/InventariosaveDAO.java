@@ -24,7 +24,7 @@ public class InventariosaveDAO {
     public static void GuardarItem(int id_itens, int id_cena_atual) throws SQLException {
         Connection conn = Mysql.getConnection();
 
-        // Verifica se o item já está no inventário
+        // vai fazer a verificao do demonho
         String sql = "SELECT id_itens FROM inventariosave WHERE id_itens = ?;";
         PreparedStatement stmt = conn.prepareStatement(sql);
         stmt.setInt(1, id_itens);
@@ -45,7 +45,7 @@ public class InventariosaveDAO {
     }
     public static int Load(int Ns) throws SQLException {
         Connection conn = Mysql.getConnection();
-        // Verifica se o item já está no inventário
+
         String sql = "select * from inventariosave i where id_cena_atual = ?";
         PreparedStatement stmt = conn.prepareStatement(sql);
         stmt.setInt(1, Ns);
@@ -62,28 +62,26 @@ public class InventariosaveDAO {
         List<Integer> saveIds = new ArrayList<>();
 
         try {
-            // Consulta SQL para obter os IDs dos saves
+
             String sql = "SELECT id_cena_atual FROM inventariosave;";
             PreparedStatement stmt = conn.prepareStatement(sql);
             ResultSet rs = stmt.executeQuery();
 
-            // Adiciona cada ID encontrado na lista
             while (rs.next()) {
                 int idSave = rs.getInt("id_cena_atual");
                 saveIds.add(idSave);
             }
         } catch (SQLException e) {
-            // Exibe mensagem de erro para depuração
             System.out.println("Erro ao carregar IDs dos saves: " + e.getMessage());
             e.printStackTrace();
         } finally {
-            // Fecha a conexão para evitar vazamentos de recursos
+
             if (conn != null) {
                 conn.close();
             }
         }
 
-        return saveIds; // Retorna a lista de IDs dos saves
+        return saveIds;
     }
     public static List<String> quantosItensTem() throws SQLException {
         Connection conn = Mysql.getConnection();
@@ -111,10 +109,11 @@ public class InventariosaveDAO {
         ResultSet rs = stmt.executeQuery();
 
         if (rs.next()) {
-            return rs.getInt(1) > 0; // Retorna true se o item estiver no inventário
+            return rs.getInt(1) > 0;
         }
         return false;
     }
+
 }
 
 

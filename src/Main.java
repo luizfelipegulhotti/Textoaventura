@@ -53,7 +53,7 @@ public static void main(String[] args) {
                             if (idProximaCena != null) {
                                 Cena proximaCena = repository.CenaDAO.findCenaById(idProximaCena);
                                 System.out.println(proximaCena.toString());
-                                // Atualiza a cena atual para a próxima cena
+
                                 cena = proximaCena;
                             } else {
                                 System.out.println("O item não pode ser usado nesta cena.");
@@ -75,7 +75,8 @@ public static void main(String[] args) {
                     } else if (CortandoFrase[0].equals("INVENTARIO")) {
                         System.out.println(repository.InventariosaveDAO.quantosItensTem());
                     } else if (CortandoFrase[0].equals("RESTART")) {
-                        System.out.println(repository.InventariosaveDAO.novoJogo());
+                        resetInventario();
+                        System.out.println(repository.CenaDAO.findNextCenaById(1));
                     }else {
                             System.out.println("Comando Invalido");
                         }
@@ -118,18 +119,13 @@ public static Integer proxima_Cena(String nomeItem, int idCenaAtual) throws SQLE
         return null;  // Retorna null se o item não estiver na cena
     }
 }
-public static void resetGame() throws SQLException {
+public static void resetInventario() throws SQLException {
     Connection conn = Mysql.getConnection();
 
-    // Deleta todos os itens do inventário
     String deleteSql = "DELETE FROM inventariosave;";
     PreparedStatement deleteStmt = conn.prepareStatement(deleteSql);
     deleteStmt.executeUpdate();
 
-    // Reinicia o progresso do jogo para a primeira cena (Cena ID 1, por exemplo)
-    String resetSql = "UPDATE inventariosave SET id_cena_atual = 1 WHERE id_inventory IS NOT NULL;";
-    PreparedStatement resetStmt = conn.prepareStatement(resetSql);
-    resetStmt.executeUpdate();
 
     System.out.println("Jogo resetado. Todos os itens foram removidos do inventário e o progresso foi reiniciado.");
 }
