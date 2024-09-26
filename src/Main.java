@@ -47,9 +47,20 @@ public static void main(String[] args) {
                     String indice = CortandoFrase[1];
                     if (CortandoFrase[0].equals("GET")) {
                         repository.InventariosaveDAO.GuardarItem(validacao(indice).getId_itens(), validacao(indice).getCena_Atual());
-                    } else if (CortandoFrase[0].equals("USE")) {
-                        System.out.println(repository.CenaDAO.findNextCenaById(proxima_Cena(indice).getProxima_Cena(cena.getId_cenas())));
-                    } else if (CortandoFrase[0].equals("CHECK")) {
+                    }
+                        if (CortandoFrase[0].equals("USE")) {
+                            Integer idProximaCena = proxima_Cena(indice, cena.getId_cenas());
+
+                            if (idProximaCena != null) {
+                                Cena proximaCena = repository.CenaDAO.findCenaById(idProximaCena);
+                                System.out.println(proximaCena.toString());
+                                // Atualiza a cena atual para a próxima cena
+                                cena = proximaCena;
+                            } else {
+                                System.out.println("O item não pode ser usado nesta cena.");
+                            }
+                        }
+                     else if (CortandoFrase[0].equals("CHECK")) {
                         System.out.println(repository.ItemDAO.CHECK(indice));
                     }else {
                         System.out.println("Comando Invalido");
@@ -63,10 +74,13 @@ public static void main(String[] args) {
                         System.out.println(repository.CenaDAO.findCenaById(repository.InventariosaveDAO.Load(Ns)));
                     } else if (CortandoFrase[0].equals("HELP")) {
                         System.out.println("Os comandos disponiveis são: 'USE NOME-DO-ITEM', 'LOAD', 'GET NOME-DO-ITEM','CHECK','INVENTARIO");
-                    } else if(CortandoFrase[0].equals("INVENTARIO")) {
+                    } else if (CortandoFrase[0].equals("INVENTARIO")) {
                         System.out.println(repository.InventariosaveDAO.quantosItensTem());
+                    } else if (CortandoFrase[0].equals("RESTART")) {
+                        resetGame();
+                        System.out.println(repository.CenaDAO.findNextCenaById(1));
                     }else {
-                            System.out.println("COMANDO FUDIDO");
+                            System.out.println("Comando Invalido");
                         }
                     }
                 }
@@ -92,17 +106,35 @@ public static Item validacao(String indice) throws SQLException {
     return itensId;
 }
 
-public static Item proxima_Cena(String indice) throws SQLException{
+public static Integer proxima_Cena(String nomeItem, int idCenaAtual) throws SQLException {
     Connection conn = Mysql.getConnection();
-    String sql = "select * from itens i where nome like ?;";
+    String sql = "SELECT proxima_Cena FROM itens WHERE nome = ? AND cena_Atual = ?;";
     PreparedStatement stmt = conn.prepareStatement(sql);
-    stmt.setString(1, "%" + indice + "%");
+    stmt.setString(1, nomeItem);
+    stmt.setInt(2, idCenaAtual);
     ResultSet rs = stmt.executeQuery();
-    Item idProximaCena = new Item();
-    if(rs.next()) {
-        idProximaCena.setProxima_Cena(rs.getInt("proxima_Cena"));
+
+    if (rs.next()) {
+        return rs.getInt("proxima_Cena");  // Retorna o ID da próxima cena
+    } else {
+        System.out.println("Item não encontrado na cena atual.");
+        return null;  // Retorna null se o item não estiver na cena
+    }
 }
-        return idProximaCena;
+public static void resetGame() throws SQLException {
+    Connection conn = Mysql.getConnection();
+
+    // Deleta todos os itens do inventário
+    String deleteSql = "DELETE FROM inventariosave;";
+    PreparedStatement deleteStmt = conn.prepareStatement(deleteSql);
+    deleteStmt.executeUpdate();
+
+    // Reinicia o progresso do jogo para a primeira cena (Cena ID 1, por exemplo)
+    String resetSql = "UPDATE inventariosave SET id_cena_atual = 1 WHERE id_inventory IS NOT NULL;";
+    PreparedStatement resetStmt = conn.prepareStatement(resetSql);
+    resetStmt.executeUpdate();
+
+    System.out.println("Jogo resetado. Todos os itens foram removidos do inventário e o progresso foi reiniciado.");
 }
 
 //

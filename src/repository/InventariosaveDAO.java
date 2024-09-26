@@ -103,7 +103,20 @@ public class InventariosaveDAO {
 
         return nomesItens;
     }
+    public static boolean itemNoInventario(int idItem) throws SQLException {
+        Connection conn = Mysql.getConnection();
+        String sql = "SELECT COUNT(*) FROM inventariosave WHERE id_itens = ?;";
+        PreparedStatement stmt = conn.prepareStatement(sql);
+        stmt.setInt(1, idItem);
+        ResultSet rs = stmt.executeQuery();
+
+        if (rs.next()) {
+            return rs.getInt(1) > 0; // Retorna true se o item estiver no inventário
+        }
+        return false;
+    }
 }
+
 
 
 
