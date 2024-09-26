@@ -47,8 +47,7 @@ public static void main(String[] args) {
                     String indice = CortandoFrase[1];
                     if (CortandoFrase[0].equals("GET")) {
                         repository.InventariosaveDAO.GuardarItem(validacao(indice).getId_itens(), validacao(indice).getCena_Atual());
-                    }
-                        if (CortandoFrase[0].equals("USE")) {
+                    } else if (CortandoFrase[0].equals("USE")) {
                             Integer idProximaCena = proxima_Cena(indice, cena.getId_cenas());
 
                             if (idProximaCena != null) {
@@ -59,14 +58,13 @@ public static void main(String[] args) {
                             } else {
                                 System.out.println("O item não pode ser usado nesta cena.");
                             }
-                        }
-                     else if (CortandoFrase[0].equals("CHECK")) {
+                        } else if (CortandoFrase[0].equals("CHECK")) {
                         System.out.println(repository.ItemDAO.CHECK(indice));
                     }else {
                         System.out.println("Comando Invalido");
                     }
                     } if(CortandoFrase.length == 1) {
-                    if (CortandoFrase[0].equals("LOAD")) {
+                    if (CortandoFrase[0].equals("LOAD"))   {
                         System.out.println("Escolha o seu save, e digite: 'NUMERO-DO-SAVE'");
                         System.out.println(repository.InventariosaveDAO.loadSaveIds());
                         int Ns = sc.nextInt();
@@ -77,8 +75,7 @@ public static void main(String[] args) {
                     } else if (CortandoFrase[0].equals("INVENTARIO")) {
                         System.out.println(repository.InventariosaveDAO.quantosItensTem());
                     } else if (CortandoFrase[0].equals("RESTART")) {
-                        resetGame();
-                        System.out.println(repository.CenaDAO.findNextCenaById(1));
+                        System.out.println(repository.InventariosaveDAO.novoJogo());
                     }else {
                             System.out.println("Comando Invalido");
                         }
