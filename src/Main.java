@@ -54,18 +54,18 @@ public static void main(String[] args) {
                     }else {
                         System.out.println("Comando Invalido");
                     }
-                    } if(CortandoFrase.length == 1){
-                        if (CortandoFrase[0].equals("LOAD")) {
-                            System.out.println("Escolha o seu save, e digite: 'NUMERO-DO-SAVE'");
-                            System.out.println(repository.InventariosaveDAO.loadSaveIds());
-                            int Ns = sc.nextInt();
-                            repository.InventariosaveDAO.Load(Ns);
-                            System.out.println(repository.CenaDAO.findCenaById(repository.InventariosaveDAO.Load(Ns)));
-                        } else if (CortandoFrase.length < 1 || !CortandoFrase[0].equals("SAVE")) {
-                            System.out.println("Comando Invalido");
-                        } else if (CortandoFrase[0].equals("HELP")) {
-                            System.out.println("Os comandos disponiveis são: 'USE NOME-DO-ITEM', 'LOAd', 'GET NOME-DO-ITEM','CHECK'");
-                        } else {
+                    } if(CortandoFrase.length == 1) {
+                    if (CortandoFrase[0].equals("LOAD")) {
+                        System.out.println("Escolha o seu save, e digite: 'NUMERO-DO-SAVE'");
+                        System.out.println(repository.InventariosaveDAO.loadSaveIds());
+                        int Ns = sc.nextInt();
+                        repository.InventariosaveDAO.Load(Ns);
+                        System.out.println(repository.CenaDAO.findCenaById(repository.InventariosaveDAO.Load(Ns)));
+                    } else if (CortandoFrase[0].equals("HELP")) {
+                        System.out.println("Os comandos disponiveis são: 'USE NOME-DO-ITEM', 'LOAD', 'GET NOME-DO-ITEM','CHECK','INVENTARIO");
+                    } else if(CortandoFrase[0].equals("INVENTARIO")) {
+                        System.out.println(repository.InventariosaveDAO.quantosItensTem());
+                    }else {
                             System.out.println("COMANDO FUDIDO");
                         }
                     }

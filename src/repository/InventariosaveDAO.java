@@ -85,6 +85,24 @@ public class InventariosaveDAO {
 
         return saveIds; // Retorna a lista de IDs dos saves
     }
+    public static List<String> quantosItensTem() throws SQLException {
+        Connection conn = Mysql.getConnection();
+        String sql = "SELECT DISTINCT i.nome " +
+                "FROM inventariosave isv " +
+                "INNER JOIN itens i ON isv.id_itens = i.id_itens;";
+
+        PreparedStatement stmt = conn.prepareStatement(sql);
+        ResultSet rs = stmt.executeQuery();
+
+        List<String> nomesItens = new ArrayList<>();
+
+        while (rs.next()) {
+            String nomeItem = rs.getString("nome");
+            nomesItens.add(nomeItem);
+        }
+
+        return nomesItens;
+    }
 }
 
 
